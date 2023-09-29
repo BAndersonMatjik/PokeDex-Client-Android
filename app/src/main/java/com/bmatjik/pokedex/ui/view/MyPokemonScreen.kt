@@ -34,8 +34,9 @@ fun MyPokemonScreen(
     modifier: Modifier = Modifier,
     onPokeItemClick: (Pokemon) -> Unit = {}
 ) {
+    val uiState = viewmodel.state.collectAsStateWithLifecycle()
     MyPokemonUi(
-        pokemons = viewmodel.state.collectAsStateWithLifecycle().value.pokemons,
+        pokemons = uiState.value.pokemons,
         onPokeItemClick = onPokeItemClick
     )
 }

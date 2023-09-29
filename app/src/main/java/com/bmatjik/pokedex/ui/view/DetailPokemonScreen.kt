@@ -36,6 +36,7 @@ import coil.request.ImageRequest
 import com.bmatjik.pokedex.R
 import com.bmatjik.pokedex.domain.model.PokemonDetail
 import com.bmatjik.pokedex.ui.theme.PokeDexTheme
+import com.bmatjik.pokedex.viewmodel.CatchState
 import com.bmatjik.pokedex.viewmodel.DetailPokemonEvent
 import com.bmatjik.pokedex.viewmodel.DetailPokemonState
 import com.bmatjik.pokedex.viewmodel.DetailPokemonViewModel
@@ -50,7 +51,16 @@ fun DetailPokemonScreen(
     LaunchedEffect(Unit) {
         viewmodel.onEvent(DetailPokemonEvent.GetDetailPokemon(id))
     }
+
+    val context = LocalContext.current
     val uiState = viewmodel.state.collectAsStateWithLifecycle()
+    uiState.value.errorMessage?.apply {
+        LaunchedEffect(key1 = this) {
+            Toast.makeText(context, this@apply, Toast.LENGTH_SHORT)
+                .show()
+
+        }
+    }
     DetailPokemonUi(pokemonDetail = uiState.value, onClickCatch = {
         viewmodel.onEvent(DetailPokemonEvent.CatchPokemon)
     }, onClickRename = {
@@ -79,60 +89,44 @@ fun DetailPokemonUi(
             openDialog = openDialog.value,
             pokemonName = pokemonDetail.pokemon.name
         )
-        LaunchedEffect(key1 = !pokemonDetail.isObtainRunning, key2 = pokemonDetail.isObtain) {
-            when {
-                !pokemonDetail.isObtain -> {
-                    Toast.makeText(context, "Failed Obtain Pokemon", Toast.LENGTH_SHORT)
-                        .show()
-                    openDialog.value = false
+
+
+        LaunchedEffect(key1 = pokemonDetail.state,key2 = pokemonDetail.pokemon) {
+            when (pokemonDetail.state) {
+                is CatchState.None -> {
+
                 }
 
-                pokemonDetail.isObtain -> {
+                is CatchState.Obtain -> {
                     Toast.makeText(context, "Saved In My Pokemon", Toast.LENGTH_SHORT)
                         .show()
                     textButton.value = "Rename Pokemon"
                     openDialog.value = false
                 }
-                else -> {}
-            }
-        }
-        LaunchedEffect(key1 = !pokemonDetail.isReleaseRunning, key2 = pokemonDetail.isRelease) {
-            when {
-                pokemonDetail.isRelease -> {
-                    Toast.makeText(context, "Release Pokemon", Toast.LENGTH_SHORT)
+
+                is CatchState.Rename -> {
+                    Toast.makeText(context, "Rename Pokemon", Toast.LENGTH_SHORT)
                         .show()
                     openDialog.value = false
                 }
 
-                !pokemonDetail.isRelease -> {
-                    Toast.makeText(context, "Failed Release Pokemon", Toast.LENGTH_SHORT)
-                        .show()
-                }
-                else -> {}
-            }
-        }
-        LaunchedEffect(key1 = !pokemonDetail.isrenameRunning, key2 = pokemonDetail.isRename) {
-            when {
-                pokemonDetail.isRename -> {
-                    Toast.makeText(context, "Rename Has Done", Toast.LENGTH_SHORT)
+                is CatchState.Release -> {
+                    Toast.makeText(context, "Release Has Done", Toast.LENGTH_SHORT)
                         .show()
                     openDialog.value = false
                 }
 
-                !pokemonDetail.isRename -> {
-                    Toast.makeText(context, "Failed Rename", Toast.LENGTH_SHORT)
-                        .show()
+                else -> {
+
                 }
-                else -> {}
             }
         }
-
         if (pokemonDetail.isLoading) {
             CircularProgressIndicator(modifier = Modifier.align(Alignment.BottomCenter))
         } else {
             Button(
                 onClick = {
-                    if (pokemonDetail.isObtain || pokemonDetail.isFromLocal) {
+                    if (pokemonDetail.state is CatchState.Obtain || pokemonDetail.isFromLocal) {
                         openDialog.value = true
                     } else {
                         onClickCatch(pokemonDetail.pokemon.id)

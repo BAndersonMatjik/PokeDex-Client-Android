@@ -16,6 +16,6 @@ class CatchPokemonUsecaseImpl @Inject constructor(private val pokemonRepository:
         resultCatch.exceptionOrNull()?.apply {
             return Result.failure(this)
         }
-        return Result.success(resultCatch.getOrDefault(false))
+            return Result.success(resultCatch.getOrDefault(false))
     }
 }

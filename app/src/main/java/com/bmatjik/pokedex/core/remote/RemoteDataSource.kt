@@ -114,7 +114,7 @@ class RemoteDataSourceImpl @Inject constructor(
             if (it.status) {
                 Result.success(it.result)
             } else {
-                Result.failure(Exception("Failed Catch Pokemon"))
+                Result.failure(Exception("Release Pokemon"))
             }
         }
         return mappedData
@@ -133,7 +133,7 @@ class RemoteDataSourceImpl @Inject constructor(
             if (it.status) {
                 Result.success(it.result)
             } else {
-                Result.failure(Exception("Failed Catch Pokemon"))
+                Result.failure(Exception("Rename Pokemon"))
             }
         }
         return mappedData

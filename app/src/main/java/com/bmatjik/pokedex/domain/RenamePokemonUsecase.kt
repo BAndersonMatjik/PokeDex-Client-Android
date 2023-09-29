@@ -13,6 +13,11 @@ interface RenamePokemonUsecase {
 class RenamePokemonUsecaseImpl @Inject constructor(private val pokemonRepository: PokemonRespository) :
     RenamePokemonUsecase {
     override suspend fun invoke(pokemonName: String, pokemonDetail: PokemonDetail): Result<String> {
+        val pokemonName = if (pokemonDetail.name.contains("-")){
+            (pokemonName +"-"+ pokemonDetail.name.split("-").lastOrNull()) ?: ""
+        }else{
+            pokemonName
+        }
         pokemonRepository.rename(pokemonName).fold(
             onSuccess = {
                 val result = pokemonDetail.copy(name = it)

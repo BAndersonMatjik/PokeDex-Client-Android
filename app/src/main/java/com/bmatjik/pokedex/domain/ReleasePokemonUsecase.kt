@@ -32,6 +32,7 @@ class ReleasePokemonUsecaseImpl @Inject constructor(
             }
         }
         try {
+            Timber.d("Flag Delete Local $flag")
             if (flag) {
                 pokemonRepository.deleteLocal(id = id)
             }

@@ -13,6 +13,7 @@ import com.bmatjik.pokedex.domain.model.Pokemon
 import com.bmatjik.pokedex.domain.model.PokemonDetail
 import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
 import timber.log.Timber
@@ -27,7 +28,7 @@ class DetailPokemonViewModel @Inject constructor(
 ) : BaseViewModel<DetailPokemonEvent>() {
 
     private val mutableState = MutableStateFlow<DetailPokemonState>(DetailPokemonState())
-    val state = mutableState
+    val state = mutableState.asStateFlow()
 
     override fun onEvent(event: DetailPokemonEvent) {
         viewModelScope.launch {
@@ -42,7 +43,7 @@ class DetailPokemonViewModel @Inject constructor(
                         }
                     }, onFailure = { exception ->
                         mutableState.update {
-                            it.copy(error = exception.message.toString(), isLoading = false)
+                            it.copy(errorMessage = exception.message.toString(), isLoading = false)
                         }
                     })
                 }
@@ -53,11 +54,14 @@ class DetailPokemonViewModel @Inject constructor(
                     }
                     catchPokemonUsecase().fold(onSuccess = { status ->
                         mutableState.update {
-                            it.copy(isLoading = false, isObtain = status, isObtainRunning = false)
+                            it.copy(isLoading = false, state = CatchState.Obtain)
                         }
                     }, onFailure = { ex ->
                         mutableState.update {
-                            it.copy(error = ex.message.toString(), isLoading = false, isObtainRunning = false)
+                            it.copy(
+                                errorMessage = ex.message.toString(),
+                                isLoading = false
+                            )
                         }
                     })
                 }
@@ -74,32 +78,52 @@ class DetailPokemonViewModel @Inject constructor(
                             it.copy(
                                 isLoading = false,
                                 pokemon = it.pokemon.copy(name = result),
-                                isRename = true,
+                                state = CatchState.Rename
                             )
                         }
                     }, onFailure = { ex ->
                         mutableState.update {
-                            it.copy(error = ex.message.toString(), isLoading = false, isrenameRunning = false)
+                            it.copy(
+                                errorMessage = ex.message.toString(),
+                                isLoading = false
+                            )
                         }
                     })
                 }
 
                 is DetailPokemonEvent.ReleasePokemon -> {
                     mutableState.update {
-                        it.copy(isLoading = true, isReleaseRunning = true)
+                        it.copy(isLoading = true)
                     }
                     releasePokemonUsecase(id = mutableState.value.pokemon.id).fold(onSuccess = { result ->
-                        mutableState.update {
-                            it.copy(isLoading = false, isRelease = result, isReleaseRunning = false)
+                        if(result){
+                            mutableState.update {
+                                it.copy(isLoading = false, state = CatchState.Release)
+                            }
+                            onEvent(DetailPokemonEvent.GetDetailPokemon(pokemonId = mutableState.value.pokemon.id.toString()))
+                        }else{
+                            mutableState.update {
+                                it.copy(
+                                    errorMessage = "Failed Release Pokemon :(",
+                                    isLoading = false
+                                )
+                            }
                         }
-                        onEvent(DetailPokemonEvent.GetDetailPokemon(pokemonId = mutableState.value.pokemon.id.toString()))
+
                     }, onFailure = { ex ->
                         mutableState.update {
-                            it.copy(error = ex.message.toString(), isLoading = false, isReleaseRunning = false)
+                            it.copy(
+                                errorMessage = ex.message.toString(),
+                                isLoading = false
+                            )
                         }
                     })
                 }
-
+                is DetailPokemonEvent.ClearErrorMessage->{
+                    mutableState.update {
+                        it.copy(errorMessage = null)
+                    }
+                }
                 else -> {
                     Timber.e("Event Not Register")
                 }
@@ -112,14 +136,18 @@ data class DetailPokemonState(
     val isLoading: Boolean = false,
     val pokemon: PokemonDetail = PokemonDetail(),
     val error: String = "",
-    val isObtainRunning:Boolean=false,
-    val isObtain:Boolean =false,
-    val isReleaseRunning:Boolean =false,
-    val isRelease:Boolean =false,
-    val isFromLocal:Boolean =false,
-    val isrenameRunning:Boolean=false,
-    val isRename:Boolean=false
+    val state: CatchState = CatchState.None,
+    val isFromLocal: Boolean = false,
+    val errorMessage:String?= null
 )
+
+sealed class CatchState() {
+    object None : CatchState()
+    object Obtain : CatchState()
+
+    object Release : CatchState()
+    object Rename : CatchState()
+}
 
 
 sealed class DetailPokemonEvent {
@@ -127,4 +155,5 @@ sealed class DetailPokemonEvent {
     object ReleasePokemon : DetailPokemonEvent()
     data class RenamePokemon(val name: String) : DetailPokemonEvent()
     object CatchPokemon : DetailPokemonEvent()
+    object ClearErrorMessage:DetailPokemonEvent()
 }
