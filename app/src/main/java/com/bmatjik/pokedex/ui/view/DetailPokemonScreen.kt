@@ -18,8 +18,10 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
@@ -77,8 +79,8 @@ fun DetailPokemonUi(
     onClickRename: (String) -> Unit = {},
     onClickRelease: () -> Unit = {},
 ) {
-    val openDialog = remember { mutableStateOf(false) }
-    val textButton = remember {
+    var openDialog: Boolean by remember { mutableStateOf(false) }
+    var textButton: String by remember {
         mutableStateOf("Catch Pokemon")
     }
     val context = LocalContext.current
@@ -86,7 +88,7 @@ fun DetailPokemonUi(
         RenamePokemonDialog(
             onClickRename = onClickRename,
             onClickRelease = onClickRelease,
-            openDialog = openDialog.value,
+            openDialog = openDialog,
             pokemonName = pokemonDetail.pokemon.name
         )
 
@@ -100,19 +102,20 @@ fun DetailPokemonUi(
                 is CatchState.Obtain -> {
                     Toast.makeText(context, "Saved In My Pokemon", Toast.LENGTH_SHORT)
                         .show()
-                    textButton.value = "Rename Pokemon"
+                    textButton = "Rename Pokemon"
+                    openDialog = true
                 }
 
                 is CatchState.Rename -> {
                     Toast.makeText(context, "Rename Pokemon", Toast.LENGTH_SHORT)
                         .show()
-                    openDialog.value = false
+                    openDialog = false
                 }
 
                 is CatchState.Release -> {
                     Toast.makeText(context, "Release Has Done", Toast.LENGTH_SHORT)
                         .show()
-                    openDialog.value = false
+                    openDialog = false
                 }
 
                 else -> {
@@ -126,7 +129,7 @@ fun DetailPokemonUi(
             Button(
                 onClick = {
                     if (pokemonDetail.state is CatchState.Obtain|| pokemonDetail.state is CatchState.Rename || pokemonDetail.isFromLocal) {
-                        openDialog.value = true
+                        openDialog = true
                     } else {
                         onClickCatch(pokemonDetail.pokemon.id)
                     }
@@ -135,7 +138,7 @@ fun DetailPokemonUi(
                     .padding(6.dp)
                     .fillMaxWidth()
             ) {
-                Text(text = textButton.value)
+                Text(text = textButton)
             }
         }
 

@@ -18,7 +18,12 @@ import com.bmatjik.pokedex.ui.theme.PokeDexTheme
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun RenamePokemonDialog(onClickRename:(String)->Unit={},onClickRelease:()->Unit={},openDialog: Boolean=true,pokemonName:String="") {
+fun RenamePokemonDialog(
+    onClickRename: (String) -> Unit = {},
+    onClickRelease: () -> Unit = {},
+    openDialog: Boolean = true,
+    pokemonName: String = ""
+) {
     var value by remember {
         mutableStateOf(pokemonName)
     }
@@ -49,7 +54,8 @@ fun RenamePokemonDialog(onClickRename:(String)->Unit={},onClickRelease:()->Unit=
         }, properties = DialogProperties(
             dismissOnBackPress = false,
             dismissOnClickOutside = false
-        ))
+        )
+        )
     }
 }
 
