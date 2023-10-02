@@ -101,7 +101,6 @@ fun DetailPokemonUi(
                     Toast.makeText(context, "Saved In My Pokemon", Toast.LENGTH_SHORT)
                         .show()
                     textButton.value = "Rename Pokemon"
-                    openDialog.value = false
                 }
 
                 is CatchState.Rename -> {
@@ -126,7 +125,7 @@ fun DetailPokemonUi(
         } else {
             Button(
                 onClick = {
-                    if (pokemonDetail.state is CatchState.Obtain || pokemonDetail.isFromLocal) {
+                    if (pokemonDetail.state is CatchState.Obtain|| pokemonDetail.state is CatchState.Rename || pokemonDetail.isFromLocal) {
                         openDialog.value = true
                     } else {
                         onClickCatch(pokemonDetail.pokemon.id)
